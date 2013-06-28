@@ -132,6 +132,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private static final String SIMULATE_COLOR_SPACE = "simulate_color_space";
     private static final String USB_AUDIO_KEY = "usb_audio";
     private static final String SHOW_CPU_USAGE_KEY = "show_cpu_usage";
+    private static final String SHOW_SYSTEM_TIME_KEY = "show_cpu_system_time";
     private static final String FORCE_HARDWARE_UI_KEY = "force_hw_ui";
     private static final String FORCE_MSAA_KEY = "force_msaa";
     private static final String TRACK_FRAME_TIME_KEY = "track_frame_time";
@@ -231,12 +232,14 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private SwitchPreference mDisableOverlays;
     private SwitchPreference mEnableMultiWindow;
     private SwitchPreference mShowCpuUsage;
+    private SwitchPreference mShowSystemTime;
     private SwitchPreference mForceHardwareUi;
     private SwitchPreference mForceMsaa;
     private SwitchPreference mShowHwScreenUpdates;
     private SwitchPreference mShowHwLayersUpdates;
     private SwitchPreference mDebugLayout;
     private SwitchPreference mForceRtlLayout;
+    
     private ListPreference mDebugHwOverdraw;
     private ListPreference mLogdSize;
     private ListPreference mUsbConfiguration;
@@ -364,8 +367,10 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         mShowScreenUpdates = findAndInitSwitchPref(SHOW_SCREEN_UPDATES_KEY);
         mDisableOverlays = findAndInitSwitchPref(DISABLE_OVERLAYS_KEY);
         mShowCpuUsage = findAndInitSwitchPref(SHOW_CPU_USAGE_KEY);
+        mShowSystemTime = findAndInitSwitchPref(SHOW_SYSTEM_TIME_KEY);
         mForceHardwareUi = findAndInitSwitchPref(FORCE_HARDWARE_UI_KEY);
         mForceMsaa = findAndInitSwitchPref(FORCE_MSAA_KEY);
+        
         mTrackFrameTime = addListPreference(TRACK_FRAME_TIME_KEY);
         mShowNonRectClip = addListPreference(SHOW_NON_RECTANGULAR_CLIP_KEY);
         mShowHwScreenUpdates = findAndInitSwitchPref(SHOW_HW_SCREEN_UPDATES_KEY);
@@ -1387,6 +1392,17 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         }
     }
 
+    private void writeSystemTimeOptions(){
+       boolean value = mShowSystemTime.isChecked();
+       Intent service = (new Intent())
+                .setClassName("com.android.systemui", "com.android.systemui.LoadSystemTime");
+        if (value) {
+            getActivity().startService(service);
+        } else {
+            getActivity().stopService(service);
+        }
+    }
+
     private void writeImmediatelyDestroyActivitiesOptions() {
         try {
             ActivityManagerNative.getDefault().setAlwaysFinish(
@@ -1706,6 +1722,8 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             }
         } else if (preference == mShowCpuUsage) {
             writeCpuUsageOptions();
+        } else if (preference == mShowSystemTime){
+            writeSystemTimeOptions();
         } else if (preference == mImmediatelyDestroyActivities) {
             writeImmediatelyDestroyActivitiesOptions();
         } else if (preference == mShowAllANRs) {

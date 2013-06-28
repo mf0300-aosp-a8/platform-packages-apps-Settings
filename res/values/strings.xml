@@ -5088,6 +5088,11 @@
     <!-- UI debug setting: show cpu usage summary [CHAR LIMIT=50] -->
     <string name="show_cpu_usage_summary">Screen overlay showing current CPU usage</string>
 
+    <!-- UI debug setting: show the current system time [CHAR LIMIT=25] -->
+    <string name="show_system_time">Show System Time</string>
+    <!-- UI debug setting: show system time summary [CHAR LIMIT=50] -->
+    <string name="show_system_time_summary">Screen overlay showing current system time</string>
+
     <!-- UI debug setting: force hardware acceleration to render apps [CHAR LIMIT=25] -->
     <string name="force_hw_ui">Force GPU rendering</string>
     <!-- UI debug setting: force hardware acceleration summary [CHAR LIMIT=50] -->
