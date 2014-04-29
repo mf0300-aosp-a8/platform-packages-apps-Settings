@@ -2907,4 +2907,8 @@
     <skip />
     <!-- no translation found for color_temperature_toast (4974218172133854827) -->
     <skip />
+
+    <string name="show_system_time">"显示系统时间"</string>
+    <string name="show_system_time_summary">"屏幕叠加显示系统当前时间"</string>
+
 </resources>
