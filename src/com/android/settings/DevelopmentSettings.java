@@ -1383,7 +1383,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     }
 	
     private void updateSystemTimeOptions() {
-        updateCheckBox(mShowSystemTime, Settings.Global.getInt(getActivity().getContentResolver(),
+        updateSwitchPreference(mShowSystemTime, Settings.Global.getInt(getActivity().getContentResolver(),
                 Settings.Global.SHOW_SYSTEM_TIME, 0) != 0);
         Log.i(TAG, "updateSystemTimeOptions:" + Settings.Global.getInt(getActivity().getContentResolver(),
                 Settings.Global.SHOW_PROCESSES, 0));

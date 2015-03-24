@@ -307,7 +307,7 @@
             android:title="@string/show_cpu_usage"
             android:summary="@string/show_cpu_usage_summary"/>
 
-        <CheckBoxPreference
+        <SwitchPreference
                 android:key="show_cpu_system_time"
                 android:title="@string/show_system_time"
                 android:summary="@string/show_system_time_summary"/>
