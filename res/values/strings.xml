@@ -5093,6 +5093,39 @@
     <!-- UI debug setting: show system time summary [CHAR LIMIT=50] -->
     <string name="show_system_time_summary">Screen overlay showing current system time</string>
 
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player [CHAR LIMIT=25]  -->
+    <string name="enable_verbose_log_media">Enable Verbose Log Multimedia</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player summary [CHAR LIMIT=50] -->
+    <string name="enable_verbose_log_media_summary">Enable verbose log for Freescale Multimedia player</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player [CHAR LIMIT=25]  -->
+    <string name="default_multimedia_player">Default Multimedia Player</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player summary [CHAR LIMIT=50] -->
+    <string name="default_multimedia_player_summary">Use the default Android Multimedia Player for Audio and Video playbacking</string>
+
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player [CHAR LIMIT=25]  -->
+    <string name="default_multimedia_recorder">Default Multimedia Recorder</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player summary [CHAR LIMIT=50] -->
+    <string name="default_multimedia_recorder_summary">Use the default Android Multimedia Recorder for Audio and Video playbacking</string>
+
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia Scanner [CHAR LIMIT=25]  -->
+    <string name="default_multimedia_scanner">Default Multimedia Scanner</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia Scanner summary [CHAR LIMIT=50] -->
+    <string name="default_multimedia_scanner_summary">Use the default Android Multimedia Scanner for Audio and Video playbacking</string>
+
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player [CHAR LIMIT=25]  -->
+    <string name="enable_verbose_log_vpu">Enable Verbose Log VPU wrapper</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player summary [CHAR LIMIT=50] -->
+    <string name="enable_verbose_log_vpu_summary">Enable verbose log for Freescale VPU wrapper</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player [CHAR LIMIT=25]  -->
+    <string name="enable_verbose_log_vpu">Enable Verbose Log VPU wrapper</string>
+    <!--  UI debug setting: enable verbose log for Freescale Multimedia player summary [CHAR LIMIT=50] -->
+    <string name="enable_verbose_log_vpu_summary">Enable verbose log for Freescale VPU wrapper</string>
+
+    <!--  UI debug setting: Disable GPU OpenGL Renderer acceleration[CHAR LIMIT=25]  -->
+    <string name="disable_GPU_OpenGL_Renderer">OpenGL Renderer</string>
+    <!--  UI debug setting: Disable GPU OpenGL Renderer acceleration summary [CHAR LIMIT=50] -->
+    <string name="disable_GPU_OpenGL_Renderer_summary">Disable GPU OpenGL Renderer acceleration</string>
+
     <!-- UI debug setting: force hardware acceleration to render apps [CHAR LIMIT=25] -->
     <string name="force_hw_ui">Force GPU rendering</string>
     <!-- UI debug setting: force hardware acceleration summary [CHAR LIMIT=50] -->

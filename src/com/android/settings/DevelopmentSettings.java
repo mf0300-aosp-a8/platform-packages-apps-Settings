@@ -33,6 +33,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -58,6 +60,7 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
+import android.preference.PreferenceCategory;
 import android.preference.SwitchPreference;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
@@ -79,6 +82,11 @@ import com.android.settings.search.BaseSearchIndexProvider;
 import com.android.settings.search.Indexable;
 import com.android.settings.widget.SwitchBar;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -133,6 +141,21 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private static final String USB_AUDIO_KEY = "usb_audio";
     private static final String SHOW_CPU_USAGE_KEY = "show_cpu_usage";
     private static final String SHOW_SYSTEM_TIME_KEY = "show_cpu_system_time";
+
+    private static final String DEFAULT_MULTIMEDIA_PLAYER_KEY="default_multimedia_player";
+    private static final String DEFAULT_MULTIMEDIA_RECORDER_KEY="default_multimedia_recorder";
+    private static final String DEFAULT_MULTIMEDIA_SCANNER_KEY="default_multimedia_scanner";
+    private static final String ENABLE_VERBOSE_LOG_KEY="enable_verbose_log_media";
+    private static final String ENABLE_VERBOSE_LOG_VPU_KEY="enable_verbose_log_vpu";
+    private static final String DISABLE_OPENGL_RENDERER_ACC_KEY="disable_gpu_opengl_renderer_accerlation";
+    private static final String USE_VIVANTE_GRALLOC_KEY="vivante_gralloc";
+    private static final String SURFACEFLINGER_COMPOSITION_KEY="surfaceFlinger";
+    private static final String WIFI_DISPLAY_SINK_KEY="wifi_display";
+    private static final String FREESCALE_DEBUG_OPTION_KEY="debug_applications_category_freescale";
+    private static final String DEVELOPEMENT_SETTINGS_KEY="development_settings";
+    private static final int CHAR_IS_FILE = 0;
+    private static final int CHAR_IS_PROP = 1;
+
     private static final String FORCE_HARDWARE_UI_KEY = "force_hw_ui";
     private static final String FORCE_MSAA_KEY = "force_msaa";
     private static final String TRACK_FRAME_TIME_KEY = "track_frame_time";
@@ -240,6 +263,19 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private SwitchPreference mDebugLayout;
     private SwitchPreference mForceRtlLayout;
     
+    private SwitchPreference mEnableVbLogMedia;
+    private SwitchPreference mDefaultMediaPlayer;
+    private SwitchPreference mDefaultMediaRecorder;
+    private SwitchPreference mDefaultMediaScanner;
+    private SwitchPreference mEnableVbLogVPU;
+    private SwitchPreference mDisableGPUAcceleration;
+    private SwitchPreference mUseVivGralloc;
+    private SwitchPreference mSurfaceFlinger;
+    private SwitchPreference mWifiDispSink;
+    private PreferenceCategory mDebugPref;
+    private PreferenceScreen mDevelopementSettings;
+    private boolean mselinux_flag;
+
     private ListPreference mDebugHwOverdraw;
     private ListPreference mLogdSize;
     private ListPreference mUsbConfiguration;
@@ -306,7 +342,15 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             return;
         }
 
-        addPreferencesFromResource(R.xml.development_prefs);
+	addPreferencesFromResource(R.xml.development_prefs);
+	//wheather the selinux was set should be checked firstly
+	mselinux_flag = true;
+	String selinux_result = SystemProperties.get("ro.boot.selinux");
+	if(selinux_result.equals("disabled")){
+		mselinux_flag = false;
+	}else{
+		mselinux_flag = true;
+	}
 
         final PreferenceGroup debugDebuggingCategory = (PreferenceGroup)
                 findPreference(DEBUG_DEBUGGING_CATEGORY_KEY);
@@ -371,7 +415,26 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         mForceHardwareUi = findAndInitSwitchPref(FORCE_HARDWARE_UI_KEY);
         mForceMsaa = findAndInitSwitchPref(FORCE_MSAA_KEY);
         
-        mTrackFrameTime = addListPreference(TRACK_FRAME_TIME_KEY);
+        mEnableVbLogMedia = findAndInitSwitchPref(ENABLE_VERBOSE_LOG_KEY);
+        mDefaultMediaPlayer = findAndInitSwitchPref(DEFAULT_MULTIMEDIA_PLAYER_KEY);
+        mDefaultMediaRecorder = findAndInitSwitchPref(DEFAULT_MULTIMEDIA_RECORDER_KEY);
+        mDefaultMediaScanner = findAndInitSwitchPref(DEFAULT_MULTIMEDIA_SCANNER_KEY);
+        mEnableVbLogVPU = findAndInitSwitchPref(ENABLE_VERBOSE_LOG_VPU_KEY);
+        mDisableGPUAcceleration = findAndInitSwitchPref(DISABLE_OPENGL_RENDERER_ACC_KEY);
+        mUseVivGralloc = findAndInitSwitchPref(USE_VIVANTE_GRALLOC_KEY);
+        mSurfaceFlinger = findAndInitSwitchPref(SURFACEFLINGER_COMPOSITION_KEY);
+        mWifiDispSink = findAndInitSwitchPref(WIFI_DISPLAY_SINK_KEY);
+        mDebugPref = (PreferenceCategory)findPreference(FREESCALE_DEBUG_OPTION_KEY);
+        mDevelopementSettings = (PreferenceScreen)findPreference(DEVELOPEMENT_SETTINGS_KEY);
+
+        if(mselinux_flag == false){
+	     // wheather it is firstly open this app after the system booted
+	     // try to set up the default value
+	      setDefaultCheckedState();
+        }else{
+              mDevelopementSettings.removePreference(mDebugPref);
+        }
+	mTrackFrameTime = addListPreference(TRACK_FRAME_TIME_KEY);
         mShowNonRectClip = addListPreference(SHOW_NON_RECTANGULAR_CLIP_KEY);
         mShowHwScreenUpdates = findAndInitSwitchPref(SHOW_HW_SCREEN_UPDATES_KEY);
         mShowHwLayersUpdates = findAndInitSwitchPref(SHOW_HW_LAYERS_UPDATES_KEY);
@@ -442,13 +505,107 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         }
     }
 
+    private boolean getDefaultProp(String cmd, String kind){
+	boolean checked = true;
+	if((kind.equals("mDefaultMediaPlayer")) ||
+	    kind.equals("mDefaultMediaRecorder")||
+            kind.equals("mDefaultMediaScanner") ){
+		String result_num = SystemProperties.get(cmd);
+		if(result_num.equals("1")){
+			return false;
+		}else{
+			return true;
+		}
+	}else if(kind.equals("mDisableGPUAcceleration")){
+		String result_false = SystemProperties.get(cmd);
+		if(result_false.equals("false")){
+			return true;
+		}else{
+			return false;
+		}
+	}else if((kind.equals("mSurfaceFlinger")) || (kind.equals("mUseVivGralloc"))){
+		String result_true = SystemProperties.get(cmd);
+		if(result_true.equals("true")){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	return false;
+    }
+
+    private boolean getDefaultValueFromFile(String path, String kind){
+	try {
+			File file_default_value = new File(path);
+			System.out.println("open the file");
+			if(!file_default_value.exists()) {
+				file_default_value.createNewFile();
+			}
+			byte echo_default_value[] = new byte[1];
+			FileInputStream input_default_value = new FileInputStream(file_default_value);
+			input_default_value.read(echo_default_value);
+			input_default_value.close();
+			String str_default_value = new String(echo_default_value);
+			if((kind.equals("mEnableVbLogVPU")) || (kind.equals("mWifiDispSink")) ){
+				if(str_default_value.equals("1")){
+					return true;
+				}else{
+					return false;
+				}
+			}
+
+			if(kind.equals("mEnableVbLogMedia")){
+				if(str_default_value.equals("3")){
+					return true;
+				}else{
+					return false;
+				}
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+    }
+
+    private void setDefaultCheckedState(){
+	boolean ischecked;
+	//1.get the default value of media.omxgm.enable-player
+	ischecked = getDefaultProp("media.omxgm.enable-player", "mDefaultMediaPlayer");
+	mDefaultMediaPlayer.setChecked(ischecked);
+	//2.get the default value of media.omxgm.enable-record
+	ischecked = getDefaultProp("media.omxgm.enable-record", "mDefaultMediaRecorder");
+	mDefaultMediaRecorder.setChecked(ischecked);
+	//3.get the default value of media.omxgm.enable-scan
+	ischecked = getDefaultProp("media.omxgm.enable-scan", "mDefaultMediaScanner");
+	mDefaultMediaScanner.setChecked(ischecked);
+	//4.get the default value of sys.viewroot.hw
+	ischecked = getDefaultProp("sys.viewroot.hw", "mDisableGPUAcceleration");
+	mDisableGPUAcceleration.setChecked(ischecked);
+	//5.get the default value of sys.gralloc.viv
+	ischecked = getDefaultProp("sys.gralloc.viv", "mUseVivGralloc");
+	mUseVivGralloc.setChecked(ischecked);
+	//6. get the default value of debug.sf.showfps
+	ischecked = getDefaultProp("debug.sf.showfps", "mSurfaceFlinger");
+	mSurfaceFlinger.setChecked(ischecked);
+	//7. get the value of /data/omx_log_level
+	ischecked = getDefaultValueFromFile("/data/omx_log_level", "mEnableVbLogMedia");
+	mEnableVbLogMedia.setChecked(ischecked);
+	//8. get the value of /data/vpu_log_level
+	ischecked = getDefaultValueFromFile("/data/vpu_log_level", "mEnableVbLogVPU");
+	mEnableVbLogVPU.setChecked(ischecked);
+	//9. get the value of /sdcard/fsl_debug_wfd_sink
+	ischecked = getDefaultValueFromFile("/sdcard/fsl_debug_wfd_sink", "mWifiDispSink");
+	mWifiDispSink.setChecked(ischecked);
+    }
+
     private ListPreference addListPreference(String prefKey) {
         ListPreference pref = (ListPreference) findPreference(prefKey);
         mAllPrefs.add(pref);
         pref.setOnPreferenceChangeListener(this);
         return pref;
     }
-
     private void disableForUser(Preference pref) {
         if (pref != null) {
             pref.setEnabled(false);
@@ -1416,8 +1573,55 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         }
     }
 
+     //parameter: checked:  the check state of SwitchPreference
+     //           cmd:      the content of the debug options
+     //		  value_on: the value of the SwitchPreference of on
+     //   	  value_off:the value of the SwitchPreference of off
+     //		  kind:     if the debug option is to operate the file, this parameter is CHAR_IS_FILE,if the debug option is to operate the properity, it is CHAR_IS_PROP
+     //example  : setprop media.omxgm.enable-player 0
+     //           writeFreescaleDebugOption(SwitchPreference.isChecked(), "media.omxgm.enable-player", "0", "1", CHAR_IS_PROP);
+     private void writeFreescaleDebugOption(boolean checked, String cmd, String value_on, String value_off, int kind){
+		if(kind == CHAR_IS_PROP){
+			writePropDebugOption(checked, cmd, value_on, value_off);
+		}else if(kind == CHAR_IS_FILE){
+			writeFileDebugOption(checked, cmd, value_on, value_off);
+		}
+     }
+
+     private void writePropDebugOption(boolean checked, String prop, String value_on, String value_off){
+		if(checked == true){
+			SystemProperties.set(prop,value_on);
+		}else{
+			SystemProperties.set(prop,value_off);
+		}
+     }
+
+    private void writeFileDebugOption(boolean checked, String path, String value_on, String value_off) {
+		try {
+
+			File file = new File(path);
+			if(!file.exists()) {
+				file.createNewFile();
+			}
+			byte echo[];
+			FileOutputStream out = new FileOutputStream(file);
+			if(checked == true){
+				echo = value_on.getBytes();
+			}else{
+				echo = value_off.getBytes();
+			}
+			out.write(echo);
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
     private void writeImmediatelyDestroyActivitiesOptions() {
         try {
+
             ActivityManagerNative.getDefault().setAlwaysFinish(
                     mImmediatelyDestroyActivities.isChecked());
         } catch (RemoteException ex) {
@@ -1771,7 +1975,25 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
             writeUSBAudioOptions();
         } else if (INACTIVE_APPS_KEY.equals(preference.getKey())) {
             startInactiveAppsFragment();
-        } else {
+        } else if (preference == mEnableVbLogMedia){
+		writeFreescaleDebugOption(mEnableVbLogMedia.isChecked(), "/data/omx_log_level", "3\n", "\n", CHAR_IS_FILE);
+        } else if (preference == mDefaultMediaPlayer){
+		writeFreescaleDebugOption(mDefaultMediaPlayer.isChecked(), "media.omxgm.enable-player", "0", "1", CHAR_IS_PROP);
+        } else if (preference == mDefaultMediaRecorder){
+		writeFreescaleDebugOption(mDefaultMediaRecorder.isChecked(), "media.omxgm.enable-record", "0", "1", CHAR_IS_PROP);
+        } else if (preference == mDefaultMediaScanner){
+		writeFreescaleDebugOption(mDefaultMediaScanner.isChecked(), "media.omxgm.enable-scan", "0", "1",CHAR_IS_PROP );
+        } else if (preference == mEnableVbLogVPU) {
+		writeFreescaleDebugOption(mEnableVbLogVPU.isChecked(), "/data/vpu_log_level", "1\n", "\n", CHAR_IS_FILE);
+        } else if (preference == mDisableGPUAcceleration) {
+		writeFreescaleDebugOption(mDisableGPUAcceleration.isChecked(), "sys.viewroot.hw", "false", "true", CHAR_IS_PROP);
+	} else if (preference == mUseVivGralloc) {
+		writeFreescaleDebugOption(mUseVivGralloc.isChecked(), "sys.gralloc.viv", "true", "false", CHAR_IS_PROP);
+	} else if (preference == mSurfaceFlinger) {
+		writeFreescaleDebugOption(mSurfaceFlinger.isChecked(), "debug.sf.showfps", "true", "false", CHAR_IS_PROP);
+	} else if (preference == mWifiDispSink) {
+		writeFreescaleDebugOption(mWifiDispSink.isChecked(), "/sdcard/fsl_debug_wfd_sink", "1\n", "\n", CHAR_IS_FILE);
+	} else {
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
 

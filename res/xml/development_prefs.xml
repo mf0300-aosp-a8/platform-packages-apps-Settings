@@ -15,7 +15,8 @@
 -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-        android:title="@string/development_settings_title">
+        android:title="@string/development_settings_title"
+        android:key="development_settings">
     <com.android.settings.BugreportPreference
             android:key="bugreport"
             android:title="@*android:string/bugreport_title"
@@ -354,4 +355,51 @@
 
      </PreferenceCategory>
 
+    <PreferenceCategory android:key="debug_applications_category_freescale"
+            android:title="Freescale debug option"
+            >
+        <SwitchPreference
+            android:key="default_multimedia_player"
+            android:summary="@string/default_multimedia_player_summary"
+            android:title="@string/default_multimedia_player" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="default_multimedia_recorder"
+            android:summary="@string/default_multimedia_recorder_summary"
+            android:title="@string/default_multimedia_recorder" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="default_multimedia_scanner"
+            android:summary="@string/default_multimedia_scanner_summary"
+            android:title="@string/default_multimedia_scanner" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="enable_verbose_log_media"
+            android:title="@string/enable_verbose_log_media"
+            android:summary="@string/enable_verbose_log_media_summary"/>
+        <SwitchPreference
+            android:key="enable_verbose_log_vpu"
+            android:title="@string/enable_verbose_log_vpu"
+            android:summary="@string/enable_verbose_log_vpu_summary"/>
+        <SwitchPreference
+            android:key="disable_gpu_opengl_renderer_accerlation"
+            android:title="@string/disable_GPU_OpenGL_Renderer"
+            android:summary="@string/disable_GPU_OpenGL_Renderer_summary" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="vivante_gralloc"
+            android:summary="Use Vivante Gralloc"
+            android:title="Vivante Gralloc" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="surfaceFlinger"
+            android:summary="Show SurfaceFlinger composition FPS"
+            android:title="SurfaceFlinger Composition" >
+        </SwitchPreference>
+        <SwitchPreference
+            android:key="wifi_display"
+            android:summary="Dump the TS stream received by sink"
+            android:title="Wifi Display Sink Debug" >
+        </SwitchPreference>
+     </PreferenceCategory>
 </PreferenceScreen>
