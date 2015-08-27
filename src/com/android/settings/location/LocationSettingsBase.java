@@ -17,11 +17,16 @@
 package com.android.settings.location;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
+import android.database.DataSetObserver;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -48,6 +53,14 @@ public abstract class LocationSettingsBase extends SettingsPreferenceFragment {
      */
     private boolean mActive = false;
 
+    private final SettingsContentObserver mSettingsContentObserver =
+            new SettingsContentObserver(new Handler()) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            refreshLocationMode();
+        }
+    };
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -66,6 +79,7 @@ public abstract class LocationSettingsBase extends SettingsPreferenceFragment {
     public void onResume() {
         super.onResume();
         mActive = true;
+        mSettingsContentObserver.register(getContentResolver());
         IntentFilter filter = new IntentFilter();
         filter.addAction(LocationManager.MODE_CHANGED_ACTION);
         getActivity().registerReceiver(mReceiver, filter);
@@ -79,6 +93,7 @@ public abstract class LocationSettingsBase extends SettingsPreferenceFragment {
             // Ignore exceptions caused by race condition
         }
         super.onPause();
+        mSettingsContentObserver.unregister(getContentResolver());
         mActive = false;
     }
 
@@ -122,5 +137,24 @@ public abstract class LocationSettingsBase extends SettingsPreferenceFragment {
             }
             onModeChanged(mode, isRestricted());
         }
+    }
+
+    private static abstract class SettingsContentObserver extends ContentObserver {
+
+        public SettingsContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        public void register(ContentResolver contentResolver) {
+            contentResolver.registerContentObserver(android.provider.Settings.Secure.getUriFor(
+                    android.provider.Settings.Secure.LOCATION_PROVIDERS_ALLOWED), false, this);
+        }
+
+        public void unregister(ContentResolver contentResolver) {
+            contentResolver.unregisterContentObserver(this);
+        }
+
+        @Override
+        public abstract void onChange(boolean selfChange, Uri uri);
     }
 }
