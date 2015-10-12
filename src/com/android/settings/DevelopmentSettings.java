@@ -17,6 +17,7 @@
 package com.android.settings;
 
 import android.Manifest;
+import com.freescale.provider.Developer;
 import android.app.Activity;
 import android.app.ActivityManagerNative;
 import android.app.AlertDialog;
@@ -322,7 +323,6 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-
         mWindowManager = IWindowManager.Stub.asInterface(ServiceManager.getService("window"));
         mBackupManager = IBackupManager.Stub.asInterface(
                 ServiceManager.getService(Context.BACKUP_SERVICE));
@@ -1541,7 +1541,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
 	
     private void updateSystemTimeOptions() {
         updateSwitchPreference(mShowSystemTime, Settings.Global.getInt(getActivity().getContentResolver(),
-                Settings.Global.SHOW_SYSTEM_TIME, 0) != 0);
+                new Developer().getShowSystemTime(), 0) != 0);
         Log.i(TAG, "updateSystemTimeOptions:" + Settings.Global.getInt(getActivity().getContentResolver(),
                 Settings.Global.SHOW_PROCESSES, 0));
     }
@@ -1563,7 +1563,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
        boolean value = mShowSystemTime.isChecked();
        Log.i(TAG, "writeSystemTimeOptions: " + value);
        Settings.Global.putInt(getActivity().getContentResolver(),
-               Settings.Global.SHOW_SYSTEM_TIME, value ? 1 : 0);
+               new Developer().getShowSystemTime(), value ? 1 : 0);
        Intent service = (new Intent())
                 .setClassName("com.android.systemui", "com.android.systemui.LoadSystemTime");
         if (value) {
