@@ -276,6 +276,7 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     private PreferenceCategory mDebugPref;
     private PreferenceScreen mDevelopementSettings;
     private boolean mselinux_flag;
+    private boolean isSupportGpuAcceleration;
 
     private ListPreference mDebugHwOverdraw;
     private ListPreference mLogdSize;
@@ -570,34 +571,40 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
     }
 
     private void setDefaultCheckedState(){
-	boolean ischecked;
-	//1.get the default value of media.omxgm.enable-player
-	ischecked = getDefaultProp("media.omxgm.enable-player", "mDefaultMediaPlayer");
-	mDefaultMediaPlayer.setChecked(ischecked);
-	//2.get the default value of media.omxgm.enable-record
-	ischecked = getDefaultProp("media.omxgm.enable-record", "mDefaultMediaRecorder");
-	mDefaultMediaRecorder.setChecked(ischecked);
-	//3.get the default value of media.omxgm.enable-scan
-	ischecked = getDefaultProp("media.omxgm.enable-scan", "mDefaultMediaScanner");
-	mDefaultMediaScanner.setChecked(ischecked);
-	//4.get the default value of sys.viewroot.hw
-	ischecked = getDefaultProp("sys.viewroot.hw", "mDisableGPUAcceleration");
-	mDisableGPUAcceleration.setChecked(ischecked);
-	//5.get the default value of sys.gralloc.viv
-	ischecked = getDefaultProp("sys.gralloc.viv", "mUseVivGralloc");
-	mUseVivGralloc.setChecked(ischecked);
-	//6. get the default value of debug.sf.showfps
-	ischecked = getDefaultProp("debug.sf.showfps", "mSurfaceFlinger");
-	mSurfaceFlinger.setChecked(ischecked);
-	//7. get the value of /data/omx_log_level
-	ischecked = getDefaultValueFromFile("/data/omx_log_level", "mEnableVbLogMedia");
-	mEnableVbLogMedia.setChecked(ischecked);
-	//8. get the value of /data/vpu_log_level
-	ischecked = getDefaultValueFromFile("/data/vpu_log_level", "mEnableVbLogVPU");
-	mEnableVbLogVPU.setChecked(ischecked);
-	//9. get the value of /sdcard/fsl_debug_wfd_sink
-	ischecked = getDefaultValueFromFile("/sdcard/fsl_debug_wfd_sink", "mWifiDispSink");
-	mWifiDispSink.setChecked(ischecked);
+        boolean ischecked;
+        //1.get the default value of media.omxgm.enable-player
+        ischecked = getDefaultProp("media.omxgm.enable-player", "mDefaultMediaPlayer");
+        mDefaultMediaPlayer.setChecked(ischecked);
+        //2.get the default value of media.omxgm.enable-record
+        ischecked = getDefaultProp("media.omxgm.enable-record", "mDefaultMediaRecorder");
+        mDefaultMediaRecorder.setChecked(ischecked);
+        //3.get the default value of media.omxgm.enable-scan
+        ischecked = getDefaultProp("media.omxgm.enable-scan", "mDefaultMediaScanner");
+        mDefaultMediaScanner.setChecked(ischecked);
+        //4.get the default value of sys.viewroot.hw
+        ischecked = getDefaultProp("sys.viewroot.hw", "mDisableGPUAcceleration");
+        isSupportGpuAcceleration = !SystemProperties.get("sys.viewroot.hw").equals("false");
+        if (!isSupportGpuAcceleration) {
+            mDebugPref.removePreference(mDisableGPUAcceleration);
+        }
+        else {
+            mDisableGPUAcceleration.setChecked(ischecked);
+        }
+        //5.get the default value of sys.gralloc.viv
+        ischecked = getDefaultProp("sys.gralloc.viv", "mUseVivGralloc");
+        mUseVivGralloc.setChecked(ischecked);
+        //6. get the default value of debug.sf.showfps
+        ischecked = getDefaultProp("debug.sf.showfps", "mSurfaceFlinger");
+        mSurfaceFlinger.setChecked(ischecked);
+        //7. get the value of /data/omx_log_level
+        ischecked = getDefaultValueFromFile("/data/omx_log_level", "mEnableVbLogMedia");
+        mEnableVbLogMedia.setChecked(ischecked);
+        //8. get the value of /data/vpu_log_level
+        ischecked = getDefaultValueFromFile("/data/vpu_log_level", "mEnableVbLogVPU");
+        mEnableVbLogVPU.setChecked(ischecked);
+        //9. get the value of /sdcard/fsl_debug_wfd_sink
+        ischecked = getDefaultValueFromFile("/sdcard/fsl_debug_wfd_sink", "mWifiDispSink");
+        mWifiDispSink.setChecked(ischecked);
     }
 
     private ListPreference addListPreference(String prefKey) {
@@ -1976,24 +1983,25 @@ public class DevelopmentSettings extends SettingsPreferenceFragment
         } else if (INACTIVE_APPS_KEY.equals(preference.getKey())) {
             startInactiveAppsFragment();
         } else if (preference == mEnableVbLogMedia){
-		writeFreescaleDebugOption(mEnableVbLogMedia.isChecked(), "/data/omx_log_level", "3\n", "\n", CHAR_IS_FILE);
+            writeFreescaleDebugOption(mEnableVbLogMedia.isChecked(), "/data/omx_log_level", "3\n", "\n", CHAR_IS_FILE);
         } else if (preference == mDefaultMediaPlayer){
-		writeFreescaleDebugOption(mDefaultMediaPlayer.isChecked(), "media.omxgm.enable-player", "0", "1", CHAR_IS_PROP);
+            writeFreescaleDebugOption(mDefaultMediaPlayer.isChecked(), "media.omxgm.enable-player", "0", "1", CHAR_IS_PROP);
         } else if (preference == mDefaultMediaRecorder){
-		writeFreescaleDebugOption(mDefaultMediaRecorder.isChecked(), "media.omxgm.enable-record", "0", "1", CHAR_IS_PROP);
+            writeFreescaleDebugOption(mDefaultMediaRecorder.isChecked(), "media.omxgm.enable-record", "0", "1", CHAR_IS_PROP);
         } else if (preference == mDefaultMediaScanner){
-		writeFreescaleDebugOption(mDefaultMediaScanner.isChecked(), "media.omxgm.enable-scan", "0", "1",CHAR_IS_PROP );
+            writeFreescaleDebugOption(mDefaultMediaScanner.isChecked(), "media.omxgm.enable-scan", "0", "1",CHAR_IS_PROP );
         } else if (preference == mEnableVbLogVPU) {
-		writeFreescaleDebugOption(mEnableVbLogVPU.isChecked(), "/data/vpu_log_level", "1\n", "\n", CHAR_IS_FILE);
+            writeFreescaleDebugOption(mEnableVbLogVPU.isChecked(), "/data/vpu_log_level", "1\n", "\n", CHAR_IS_FILE);
         } else if (preference == mDisableGPUAcceleration) {
-		writeFreescaleDebugOption(mDisableGPUAcceleration.isChecked(), "sys.viewroot.hw", "false", "true", CHAR_IS_PROP);
-	} else if (preference == mUseVivGralloc) {
-		writeFreescaleDebugOption(mUseVivGralloc.isChecked(), "sys.gralloc.viv", "true", "false", CHAR_IS_PROP);
-	} else if (preference == mSurfaceFlinger) {
-		writeFreescaleDebugOption(mSurfaceFlinger.isChecked(), "debug.sf.showfps", "true", "false", CHAR_IS_PROP);
-	} else if (preference == mWifiDispSink) {
-		writeFreescaleDebugOption(mWifiDispSink.isChecked(), "/sdcard/fsl_debug_wfd_sink", "1\n", "\n", CHAR_IS_FILE);
-	} else {
+            if (isSupportGpuAcceleration)
+                writeFreescaleDebugOption(mDisableGPUAcceleration.isChecked(), "sys.viewroot.hw", "false", "true", CHAR_IS_PROP);
+        } else if (preference == mUseVivGralloc) {
+            writeFreescaleDebugOption(mUseVivGralloc.isChecked(), "sys.gralloc.viv", "true", "false", CHAR_IS_PROP);
+        } else if (preference == mSurfaceFlinger) {
+            writeFreescaleDebugOption(mSurfaceFlinger.isChecked(), "debug.sf.showfps", "true", "false", CHAR_IS_PROP);
+        } else if (preference == mWifiDispSink) {
+            writeFreescaleDebugOption(mWifiDispSink.isChecked(), "/sdcard/fsl_debug_wfd_sink", "1\n", "\n", CHAR_IS_FILE);
+        } else {
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
 
