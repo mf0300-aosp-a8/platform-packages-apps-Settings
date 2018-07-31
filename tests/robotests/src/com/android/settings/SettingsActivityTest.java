@@ -18,6 +18,7 @@ package com.android.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doReturn;
@@ -30,16 +31,21 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.Settings.Global;
+import android.view.View;
 import android.view.Menu;
 
 import com.android.settings.search.SearchActivity;
 import com.android.settings.testutils.FakeFeatureFactory;
 import com.android.settings.testutils.SettingsRobolectricTestRunner;
+import com.android.settings.testutils.shadow.SettingsShadowResources;
+import com.android.settings.testutils.shadow.SettingsShadowResourcesImpl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.robolectric.Robolectric;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
@@ -70,9 +77,38 @@ public class SettingsActivityTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-
+        mContext = RuntimeEnvironment.application;
         mActivity = spy(new SettingsActivity());
         doReturn(mBitmap).when(mActivity).getBitmapFromXmlResource(anyInt());
+    }
+
+    @Test
+    @Config(shadows = {
+        SettingsShadowResourcesImpl.class,
+        SettingsShadowResources.SettingsShadowTheme.class,
+    })
+    public void onCreate_deviceNotProvisioned_shouldDisableSearch() {
+        Global.putInt(mContext.getContentResolver(), Global.DEVICE_PROVISIONED, 0);
+        final Intent intent = new Intent(mContext, Settings.class);
+        final SettingsActivity activity =
+            Robolectric.buildActivity(SettingsActivity.class, intent).create(Bundle.EMPTY).get();
+
+        assertThat(activity.findViewById(R.id.search_bar).getVisibility())
+            .isEqualTo(View.INVISIBLE);
+    }
+
+    @Test
+    @Config(shadows = {
+        SettingsShadowResourcesImpl.class,
+        SettingsShadowResources.SettingsShadowTheme.class,
+    })
+    public void onCreate_deviceProvisioned_shouldEnableSearch() {
+        Global.putInt(mContext.getContentResolver(), Global.DEVICE_PROVISIONED, 1);
+        final Intent intent = new Intent(mContext, Settings.class);
+        final SettingsActivity activity =
+            Robolectric.buildActivity(SettingsActivity.class, intent).create(Bundle.EMPTY).get();
+
+        assertThat(activity.findViewById(R.id.search_bar).getVisibility()).isEqualTo(View.VISIBLE);
     }
 
     @Test
