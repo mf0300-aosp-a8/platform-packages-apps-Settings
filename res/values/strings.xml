@@ -5496,6 +5496,9 @@
 
     <string name="wimax_settings">4G</string>
     <string name="status_wimax_mac_address">4G MAC address</string>
+    <string name="ethernet_advanced_ip_address_title">Ethernet IP</string>
+    <string name="status_ethernet_mac_address">Ethernet MAC</string>
+
     <!-- This is displayed to the user when the device needs to be decrypted -->
     <string name="enter_password">To start Android, enter your password</string>
     <!-- Informational text on the pin entry screen prompting the user for their pin -->
