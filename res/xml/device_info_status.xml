@@ -89,4 +89,18 @@
         android:title="@string/status_wimax_mac_address"
         android:summary="@string/device_info_not_available"
         android:persistent="false" />
+    <Preference
+        android:key="ethernet_ip_address"
+        android:enabled="false"
+        android:shouldDisableView="false"
+        android:title="@string/ethernet_advanced_ip_address_title"
+        android:summary="@string/device_info_not_available"
+        android:persistent="false" />
+    <Preference
+        android:key="ethernet_mac_address"
+        android:enabled="false"
+        android:shouldDisableView="false"
+        android:title="@string/status_ethernet_mac_address"
+        android:summary="@string/device_info_not_available"
+        android:persistent="false" />
 </PreferenceScreen>
