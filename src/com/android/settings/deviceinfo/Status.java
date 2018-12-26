@@ -23,8 +23,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
+import android.net.EthernetManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.net.IpConfiguration;
+import android.net.StaticIpConfiguration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -34,6 +37,14 @@ import android.os.UserManager;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceScreen;
 import android.text.TextUtils;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.io.RandomAccessFile;
+import java.io.ByteArrayOutputStream;
 
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.internal.util.ArrayUtils;
@@ -44,9 +55,11 @@ import com.android.settings.Utils;
 import java.lang.ref.WeakReference;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.content.Context.ETHERNET_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
 
 public class Status extends SettingsPreferenceFragment {
+    private String TAG = "Settings_Status";
 
     private static final String KEY_BATTERY_STATUS = "battery_status";
     private static final String KEY_BATTERY_LEVEL = "battery_level";
@@ -56,6 +69,8 @@ public class Status extends SettingsPreferenceFragment {
     private static final String KEY_WIMAX_MAC_ADDRESS = "wimax_mac_address";
     private static final String KEY_SIM_STATUS = "sim_status";
     private static final String KEY_IMEI_INFO = "imei_info";
+    private static final String KEY_ETHERNET_IP_ADDRESS = "ethernet_ip_address";
+    private static final String KEY_ETHERNET_MAC_ADDRESS = "ethernet_mac_address";
 
     // Broadcasts to listen to for connectivity changes.
     private static final String[] CONNECTIVITY_INTENTS = {
@@ -83,6 +98,8 @@ public class Status extends SettingsPreferenceFragment {
     private Preference mBatteryLevel;
     private Preference mBtAddress;
     private Preference mIpAddress;
+    //private Preference mEthIpAddress;
+    //private Preference mEthMacAddress;
     private Preference mWifiMacAddress;
     private Preference mWimaxMacAddress;
     private Handler mHandler;
@@ -162,6 +179,8 @@ public class Status extends SettingsPreferenceFragment {
         mWifiMacAddress = findPreference(KEY_WIFI_MAC_ADDRESS);
         mWimaxMacAddress = findPreference(KEY_WIMAX_MAC_ADDRESS);
         mIpAddress = findPreference(KEY_IP_ADDRESS);
+        //mEthIpAddress = findPreference(KEY_ETHERNET_IP_ADDRESS);
+        //mEthMacAddress = findPreference(KEY_ETHERNET_MAC_ADDRESS);
 
         mRes = getResources();
         mUnavailable = mRes.getString(R.string.status_unavailable);
@@ -274,6 +293,14 @@ public class Status extends SettingsPreferenceFragment {
         setWifiStatus();
         setBtStatus();
         setIpAddressStatus();
+        try {
+            Log.i(TAG, "*** Trying get IP/MAC for ETH");
+            setEthernetIpAddressStatus();
+            setEthernetMacAddress();
+            Log.i(TAG, "*** Trying get IP/MAC for ETH Done");
+        } catch(Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     void updateTimes() {
@@ -301,5 +328,70 @@ public class Status extends SettingsPreferenceFragment {
         int h = (int)((t / 3600));
 
         return h + ":" + pad(m) + ":" + pad(s);
+    }
+
+    private void setEthernetIpAddressStatus() {
+        Preference ip = findPreference(KEY_ETHERNET_IP_ADDRESS);
+		EthernetManager mgr = (EthernetManager) getSystemService(ETHERNET_SERVICE);
+        IpConfiguration ipc = (IpConfiguration) mgr.getConfiguration();
+        StaticIpConfiguration info = null;
+        if (ipc != null) {
+            info = ipc.getStaticIpConfiguration();
+        }
+
+		String addr = null;
+        try {
+            if (info != null) {
+                StringBuffer str = new StringBuffer();
+                if (info.ipAddress != null) {
+                    str.append(info.ipAddress);
+                    addr = str.toString();
+                } else {
+                    addr = SystemProperties.get("dhcp.eth0.ipaddress");
+                }
+            } else {
+                addr = SystemProperties.get("dhcp.eth0.ipaddress");
+            }
+        } catch(Throwable t) {
+            t.printStackTrace();
+        }
+		ip.setSummary(!TextUtils.isEmpty(addr) ? addr : getString(R.string.status_unavailable));
+	}
+
+    private static ByteArrayOutputStream readFileAsBytes(String path) throws IOException {
+        RandomAccessFile f = null;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        int total = 0;
+        try {
+            f = new RandomAccessFile(path, "r");
+            //UnsafeByteSequence bytes = new UnsafeByteSequence((int) f.length());
+            byte[] buffer = new byte[8192];
+            while (true) {
+                int byteCount = f.read(buffer);
+                if (byteCount == -1) {
+                    f.close();
+                    return bytes;
+                }
+                bytes.write(buffer, 0, byteCount);
+            }
+        } finally {
+            if (f != null) f.close();
+            return bytes;
+        }
+    }
+
+    public static String readFileAsString(String path) throws IOException {
+        return readFileAsBytes(path).toString();
+    }
+
+    private void setEthernetMacAddress() {
+        Preference mac = findPreference(KEY_ETHERNET_MAC_ADDRESS);
+        String addr = null;
+        try {
+            addr = readFileAsString("/sys/class/net/eth0/address").toUpperCase().substring(0, 17);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mac.setSummary(!TextUtils.isEmpty(addr) ? addr : getString(R.string.status_unavailable));
     }
 }
