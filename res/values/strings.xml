@@ -2660,6 +2660,12 @@
     <string name="status_roaming">Roaming</string>
     <!-- About phone, status item title. The cell carrier that the user is connected to.  -->
     <string name="status_operator">Network</string>
+    <!-- About phone, status item title. Ethernet device's current IP address.  -->
+    <string name="status_eth_ip_address">Ethernet IP address</string>
+    <!-- About phone, status item title.  The MAC address of the ETH network adapter. -->
+    <string name="status_eth_mac_address">Ethernet MAC address</string>
+    <!-- About phone, status item title. Wi-Fi device's current IP address.  -->
+    <string name="status_wifi_ip_address">Wi\u2011Fi IP address</string>
     <!-- About phone, status item title.  The MAC address of the Wi-Fi network adapter. -->
     <string name="status_wifi_mac_address">Wi\u2011Fi MAC address</string>
     <!-- About phone, status item title.  The bluetooth adapter's hardware address-->
@@ -5496,9 +5502,6 @@
 
     <string name="wimax_settings">4G</string>
     <string name="status_wimax_mac_address">4G MAC address</string>
-    <string name="ethernet_advanced_ip_address_title">Ethernet IP</string>
-    <string name="status_ethernet_mac_address">Ethernet MAC</string>
-
     <!-- This is displayed to the user when the device needs to be decrypted -->
     <string name="enter_password">To start Android, enter your password</string>
     <!-- Informational text on the pin entry screen prompting the user for their pin -->

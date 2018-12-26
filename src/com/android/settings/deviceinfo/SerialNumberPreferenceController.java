@@ -26,21 +26,15 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.settings.core.PreferenceController;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintStream;
 
-import java.util.concurrent.Semaphore;
-import java.net.InetSocketAddress;
 import android.net.LocalSocketAddress;
 import android.net.LocalSocket;
-import java.net.Socket;
 import android.util.Log;
 
 public class SerialNumberPreferenceController extends PreferenceController {
-    private String TAG = "Settings_Status";
+    private static final String TAG = "Settings_Status";
 
     private static final String KEY_SERIAL_NUMBER = "serial_number";
 
@@ -50,21 +44,7 @@ public class SerialNumberPreferenceController extends PreferenceController {
         super(context);
         // //////////////////////////////////////////////
         // MF0300
-
-        Log.i(TAG, "*** TcpClientThread BEFORE");
-        tcpClientThread = new TcpClientThread();
-        tcpClientThread.start();
-        Log.i(TAG, "*** TcpClientThread AFTER");
-
-        try {
-                sema_sync.acquire();
-        } catch(Exception e) {
-                Log.e(TAG, "*** UNABLE GET HW:SERIALNO EXCEPTION" + e.getMessage());
-                e.printStackTrace();
-        }
-        // //////////////////////////////////////////////
-
-        //String serial = Build.SERIAL;
+        mSerialNumber = readSerialNumber();
         Log.i(TAG, "*** serial:" + mSerialNumber);
     }
 
@@ -93,62 +73,40 @@ public class SerialNumberPreferenceController extends PreferenceController {
         return KEY_SERIAL_NUMBER;
     }
 
-    class TcpClientThread extends Thread {
-        TcpClientThread() {
-        }
+    private static String readSerialNumber() {
+        String serial = null;
+        try {
+            Log.i(TAG, "*** HWSER LocalSocket");
+            LocalSocketAddress localsocketaddr = new LocalSocketAddress("serialnumber", LocalSocketAddress.Namespace.RESERVED);
+            LocalSocket socket = new LocalSocket();
+            socket.connect(localsocketaddr);
 
-        public void run() {
-                try {
-                        String sernum="cmd::get::";
+            PrintStream out = new PrintStream(socket.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                        LocalSocket socket;
-                        LocalSocketAddress localsocketaddr;
-                        InputStream is;
-                        OutputStream os;
-                        DataInputStream dis;
-                        PrintStream ps;
-                        BufferedReader br;
-                        Log.i(TAG, "*** HWSER LocalSocket");
-                        socket = new LocalSocket();
-                        localsocketaddr = new LocalSocketAddress("serialnumber",LocalSocketAddress.Namespace.RESERVED);
-                        socket.connect(localsocketaddr);
-                        is = socket.getInputStream();
-                        os = socket.getOutputStream();
-                        dis = new DataInputStream(is);
-                        ps = new PrintStream(os);
+            Log.i(TAG, "*** HWSER getBytes");
+            String sernum = "cmd::get::";
+            out.write(sernum.getBytes());
 
-                        Log.i(TAG, "*** HWSER getBytes");
-
-                        byte[] msg1 = sernum.getBytes();
-                        ps.write(msg1);
-                        InputStream in = socket.getInputStream();
-                        br = new BufferedReader(new InputStreamReader(in));
-                        if (sernum.endsWith("get::")) {
-                                StringBuffer strBuffer = new StringBuffer();
-                                char c = (char) br.read();
-                                while (c != 0xffff) {
-                                        strBuffer.append(c);
-                                        c=(char) br.read();
-                                }
-                                mSerialNumber=strBuffer.toString();
-                                sema_sync.release();
-                        }
-
-			Log.i(TAG, "*** HWSER getBytes DONE serial:" + mSerialNumber);
-
-                        dis.close();
-                        ps.close();
-                        is.close();
-                        os.close();
-                        socket.close();
-                } catch (Exception e) {
-                        Log.e(TAG, "*** ENABLE GET HW:SERIAL FROMSOCKET EXCEPTION " + e.getMessage());
-                        e.printStackTrace();
-
+            if (sernum.endsWith("get::")) {
+                StringBuffer strBuffer = new StringBuffer();
+                char c = (char) in.read();
+                while (c != 0xffff) {
+                    strBuffer.append(c);
+                    c = (char) in.read();
                 }
-        }
-    }
+                serial = strBuffer.toString();
+            }
 
-    private TcpClientThread tcpClientThread = null;
-    private final Semaphore sema_sync = new Semaphore(0, true);
+            Log.i(TAG, "*** HWSER getBytes DONE serial: " + serial);
+
+            in.close();
+            out.close();
+            socket.close();
+        } catch (Exception e) {
+            Log.e(TAG, "*** ENABLE GET HW:SERIAL FROMSOCKET EXCEPTION " + e.getMessage());
+            e.printStackTrace();
+        }
+        return serial;
+    }
 }
