@@ -54,6 +54,7 @@ import android.hardware.fingerprint.FingerprintManager;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -236,6 +237,24 @@ public final class Utils extends com.android.settingslib.Utils {
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         return (cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false);
+    }
+
+    /**
+     * Returns the Ethernet IP Addresses, if any, taking into account IPv4 and IPv6 style addresses.
+     * @param context the application context
+     * @return the formatted and newline-separated IP addresses, or null if none.
+     */
+    public static String getEthernetIpAddresses(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        for (Network network : cm.getAllNetworks()) {
+            NetworkCapabilities ncap = cm.getNetworkCapabilities(network);
+            if (ncap.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                LinkProperties prop = cm.getLinkProperties(network);
+                return formatIpAddresses(prop);
+            }
+        }
+        return null;
     }
 
     /**
