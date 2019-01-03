@@ -23,11 +23,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
-import android.net.EthernetManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.net.IpConfiguration;
-import android.net.StaticIpConfiguration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -37,7 +34,6 @@ import android.os.UserManager;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceScreen;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,11 +48,9 @@ import com.android.settings.Utils;
 import java.lang.ref.WeakReference;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
-import static android.content.Context.ETHERNET_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
 
 public class Status extends SettingsPreferenceFragment {
-    private String TAG = "Settings_Status";
 
     private static final String KEY_BATTERY_STATUS = "battery_status";
     private static final String KEY_BATTERY_LEVEL = "battery_level";
@@ -83,7 +77,6 @@ public class Status extends SettingsPreferenceFragment {
 
     private ConnectivityManager mCM;
     private WifiManager mWifiManager;
-    private EthernetManager mEthernetManager;
 
     private Resources mRes;
 
@@ -168,7 +161,6 @@ public class Status extends SettingsPreferenceFragment {
 
         mCM = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         mWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
-        mEthernetManager = (EthernetManager) getSystemService(ETHERNET_SERVICE);
         mSerialNumberPreferenceController = new SerialNumberPreferenceController(getActivity());
 
         addPreferencesFromResource(R.xml.device_info_status);
@@ -266,7 +258,7 @@ public class Status extends SettingsPreferenceFragment {
     }
 
     private void setIpAddressStatus() {
-        String ipAddress = Utils.getDefaultIpAddresses(this.mCM);
+        String ipAddress = Utils.getWifiIpAddresses(getContext());
         if (ipAddress != null) {
             mIpAddress.setSummary(ipAddress);
         } else {
@@ -292,14 +284,8 @@ public class Status extends SettingsPreferenceFragment {
         setWifiStatus();
         setBtStatus();
         setIpAddressStatus();
-        try {
-            Log.i(TAG, "*** Trying get IP/MAC for ETH");
-            setEthernetIpAddressStatus();
-            setEthernetMacAddress();
-            Log.i(TAG, "*** Trying get IP/MAC for ETH Done");
-        } catch(Throwable t) {
-            t.printStackTrace();
-        }
+        setEthernetIpAddressStatus();
+        setEthernetMacAddress();
     }
 
     void updateTimes() {
@@ -330,30 +316,12 @@ public class Status extends SettingsPreferenceFragment {
     }
 
     private void setEthernetIpAddressStatus() {
-		EthernetManager mgr = (EthernetManager) getSystemService(ETHERNET_SERVICE);
-        IpConfiguration ipc = (IpConfiguration) mgr.getConfiguration();
-        StaticIpConfiguration info = null;
-        if (ipc != null) {
-            info = ipc.getStaticIpConfiguration();
+        String ipAddress = Utils.getEthernetIpAddresses(getContext());
+        if (ipAddress != null) {
+            mEthIpAddress.setSummary(ipAddress);
+        } else {
+            mEthIpAddress.setSummary(mUnavailable);
         }
-
-		String addr = null;
-        try {
-            if (info != null) {
-                StringBuffer str = new StringBuffer();
-                if (info.ipAddress != null) {
-                    str.append(info.ipAddress);
-                    addr = str.toString();
-                } else {
-                    addr = SystemProperties.get("dhcp.eth0.ipaddress");
-                }
-            } else {
-                addr = SystemProperties.get("dhcp.eth0.ipaddress");
-            }
-        } catch(Throwable t) {
-            t.printStackTrace();
-        }
-		mEthIpAddress.setSummary(!TextUtils.isEmpty(addr) ? addr : getString(R.string.status_unavailable));
 	}
 
     private void setEthernetMacAddress() {
@@ -364,6 +332,6 @@ public class Status extends SettingsPreferenceFragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        mEthMacAddress.setSummary(!TextUtils.isEmpty(addr) ? addr : getString(R.string.status_unavailable));
+        mEthMacAddress.setSummary(!TextUtils.isEmpty(addr) ? addr : mUnavailable);
     }
 }
