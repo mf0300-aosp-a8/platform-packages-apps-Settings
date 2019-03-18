@@ -164,7 +164,7 @@ public class BrightnessLevelPreferenceController extends PreferenceController im
         try {
             return IVrManager.Stub.asInterface(ServiceManager.getService(Context.VR_SERVICE))
                     .getVrModeState();
-        } catch (RemoteException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Failed to check vr mode!", e);
         }
         return false;
