@@ -308,14 +308,10 @@ public class SecuritySettings extends SettingsPreferenceFragment
                 root.findPreference(KEY_DEVICE_ADMIN_CATEGORY);
         mToggleAppInstallation = (SwitchPreference) findPreference(
                 KEY_TOGGLE_INSTALL_APPLICATIONS);
-        mToggleAppInstallation.setChecked(isNonMarketAppsAllowed());
+        mToggleAppInstallation.setChecked(false);
         // Side loading of apps.
-        // Disable for restricted profiles. For others, check if policy disallows it.
-        mToggleAppInstallation.setEnabled(!um.getUserInfo(MY_USER_ID).isRestricted());
-        if (um.hasUserRestriction(UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES)
-                || um.hasUserRestriction(UserManager.DISALLOW_INSTALL_APPS)) {
-            mToggleAppInstallation.setEnabled(false);
-        }
+        // Force disable untrusted packages installation.
+        mToggleAppInstallation.setEnabled(false);
 
         // Advanced Security features
         PreferenceGroup advancedCategory =
