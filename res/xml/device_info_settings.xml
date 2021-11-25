@@ -113,4 +113,11 @@
                 android:title="@string/selinux_status"
                 android:summary="@string/selinux_status_enforcing"/>
 
+        <!-- ROM name -->
+        <Preference android:key="rom_name"
+                android:enabled="false"
+                android:shouldDisableView="false"
+                android:title="ROM name"
+                android:summary="Shift4 Payments"/>
+
 </PreferenceScreen>
